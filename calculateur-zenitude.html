@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculateur de Prix — Zénitude Nature</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0d1b0f 0%, #1a2f1c 40%, #0d1b0f 100%);
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #e8dcc8;
+    padding: 2rem 1rem;
+  }
+  .header { text-align: center; margin-bottom: 2.5rem; }
+  .header .sous-titre {
+    font-size: 0.75rem; letter-spacing: 0.3em; color: #8fbc8f;
+    margin-bottom: 0.5rem; text-transform: uppercase;
+  }
+  h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: normal; color: #f5ead8; }
+  .separateur {
+    width: 60px; height: 2px;
+    background: linear-gradient(90deg, transparent, #8fbc8f, transparent);
+    margin: 1rem auto;
+  }
+  .sous-titre2 { color: #9cad9c; font-size: 0.9rem; }
+
+  .card {
+    max-width: 560px; margin: 0 auto 2rem;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(143,188,143,0.2);
+    border-radius: 4px; padding: 2rem;
+  }
+  .grille-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+  label { display: flex; flex-direction: column; gap: 0.4rem; }
+  .lbl {
+    font-size: 0.7rem; letter-spacing: 0.2em;
+    text-transform: uppercase; color: #8fbc8f;
+  }
+  input[type=date], input[type=number] {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(143,188,143,0.3);
+    border-radius: 3px; color: #e8dcc8;
+    padding: 0.6rem 0.8rem; font-size: 0.95rem;
+    font-family: inherit; color-scheme: dark; width: 100%;
+  }
+  .slider-wrap { display: flex; align-items: center; gap: 1rem; margin-top: 0.4rem; }
+  input[type=range] { flex: 1; accent-color: #8fbc8f; }
+  .pers-val {
+    min-width: 2.5rem; text-align: center;
+    font-size: 1.4rem; color: #f5ead8; font-weight: bold;
+  }
+  .pers-extra { font-size: 0.8rem; color: #c8a87a; margin-top: 0.3rem; }
+
+  .badge-periode {
+    margin-top: 1.2rem; padding: 0.6rem 1rem;
+    background: rgba(143,188,143,0.08);
+    border: 1px solid rgba(143,188,143,0.15);
+    border-radius: 3px; font-size: 0.82rem; color: #8fbc8f;
+  }
+  .badge-periode strong { color: #c8f0c8; }
+
+  /* Résultat */
+  .resultat {
+    max-width: 560px; margin: 0 auto;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(143,188,143,0.25);
+    border-radius: 4px; overflow: hidden;
+    animation: fadeIn 0.3s ease;
+  }
+  .total-header {
+    background: linear-gradient(135deg, rgba(143,188,143,0.12), rgba(143,188,143,0.06));
+    padding: 1.8rem 2rem; text-align: center;
+    border-bottom: 1px solid rgba(143,188,143,0.15);
+  }
+  .total-label {
+    font-size: 0.7rem; letter-spacing: 0.3em;
+    text-transform: uppercase; color: #8fbc8f; margin-bottom: 0.5rem;
+  }
+  .total-montant {
+    font-size: clamp(2.5rem, 7vw, 3.5rem);
+    color: #f5ead8; font-weight: normal; line-height: 1;
+  }
+  .depot-solde {
+    margin-top: 1rem; display: flex;
+    justify-content: center; gap: 2rem; font-size: 0.85rem;
+  }
+  .depot-solde .ds-label {
+    color: #8fbc8f; font-size: 0.7rem; letter-spacing: 0.15em;
+    text-transform: uppercase; margin-bottom: 0.2rem;
+  }
+  .depot-solde .ds-val { color: #e8dcc8; font-size: 1.05rem; }
+  .sep-v { width: 1px; background: rgba(143,188,143,0.2); }
+
+  .detail-zone { padding: 1.5rem 2rem; }
+  .btn-detail {
+    background: none; border: none; color: #8fbc8f; cursor: pointer;
+    font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 0; font-family: inherit; margin-bottom: 0;
+  }
+  .detail-content { margin-top: 1rem; font-size: 0.88rem; line-height: 1.9; }
+
+  .nuits-detail {
+    margin-bottom: 1rem; padding: 1rem;
+    background: rgba(0,0,0,0.2); border-radius: 3px;
+  }
+  .nuits-detail .nd-titre {
+    font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;
+    color: #8fbc8f; margin-bottom: 0.6rem;
+  }
+  .nuit-row { display: flex; justify-content: space-between; }
+  .nuit-row.supp { color: #9cad9c; }
+  .tag-fs { color: #c8a87a; font-size: 0.75rem; }
+  .tag-rabais { color: #6a8a6a; font-size: 0.75rem; }
+
+  .ligne { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; color: #9cad9c; }
+  .ligne.bold { color: #e8dcc8; font-weight: bold; }
+  .ligne.accent { color: #f5ead8; font-weight: bold; font-size: 1.1rem; }
+  .ligne span:last-child { white-space: nowrap; }
+  .sep-h { border-top: 1px solid rgba(143,188,143,0.15); margin: 0.5rem 0; padding-top: 0.5rem; }
+  .sep-h2 { border-top: 1px solid rgba(143,188,143,0.4); margin: 0.8rem 0; padding-top: 0.8rem; }
+
+  .badge-depot-sec {
+    margin-top: 1rem; padding: 0.8rem 1rem;
+    background: rgba(200,168,122,0.06);
+    border: 1px solid rgba(200,168,122,0.2);
+    border-radius: 3px; font-size: 0.8rem; color: #c8a87a;
+  }
+  .erreur { text-align: center; color: #6a8a6a; font-size: 0.9rem; margin-top: 1rem; }
+  .hidden { display: none; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  input[type=date]::-webkit-calendar-picker-indicator {
+    filter: invert(0.7) sepia(0.3) saturate(0.8);
+  }
+  @media (max-width: 400px) {
+    .grille-dates { grid-template-columns: 1fr; }
+    .depot-solde { gap: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="sous-titre">Zénitude Nature — St-Côme, Lanaudière</div>
+  <h1>Calculateur de Prix</h1>
+  <div class="separateur"></div>
+  <p class="sous-titre2">Jusqu'à 16 personnes · Bord du lac Bourgeois</p>
+</div>
+
+<div class="card">
+  <div class="grille-dates">
+    <label>
+      <span class="lbl">Arrivée</span>
+      <input type="date" id="arrivee" />
+    </label>
+    <label>
+      <span class="lbl">Départ</span>
+      <input type="date" id="depart" />
+    </label>
+  </div>
+
+  <label>
+    <span class="lbl">Personnes <span style="color:#6a8a6a;font-style:italic;text-transform:none;letter-spacing:0">(base : 8, max : 16)</span></span>
+    <div class="slider-wrap">
+      <input type="range" id="slider" min="1" max="16" value="8" />
+      <span class="pers-val" id="pers-val">8</span>
+    </div>
+    <div class="pers-extra hidden" id="pers-extra"></div>
+  </label>
+
+  <div class="badge-periode hidden" id="badge-periode"></div>
+</div>
+
+<div class="resultat hidden" id="resultat">
+  <div class="total-header">
+    <div class="total-label" id="total-label">Total pour 1 nuit</div>
+    <div class="total-montant" id="total-montant"></div>
+    <div class="depot-solde">
+      <div>
+        <div class="ds-label">Dépôt (50%)</div>
+        <div class="ds-val" id="ds-depot"></div>
+      </div>
+      <div class="sep-v"></div>
+      <div>
+        <div class="ds-label">Solde (14 j avant)</div>
+        <div class="ds-val" id="ds-solde"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-zone">
+    <button class="btn-detail" id="btn-detail" onclick="toggleDetail()">▼ Voir le détail</button>
+    <div class="detail-content hidden" id="detail-content"></div>
+  </div>
+</div>
+
+<div class="erreur hidden" id="erreur">Veuillez sélectionner des dates valides (arrivée avant départ).</div>
+
+<script>
+// ─── GRILLE TARIFAIRE ─────────────────────────────────────────
+const TARIFS = [
+  { nom: "TARIF DE BASE", debut: null, fin: null, nuit: 425, nuitFS: 520, isDefault: true },
+  { nom: "PRINTEMPS",                  debut: "2026-04-06", fin: "2026-05-14", nuit: 445, nuitFS: 545 },
+  { nom: "FÊTE DES PATRIOTES",         debut: "2026-05-15", fin: "2026-05-17", nuit: 675, nuitFS: null },
+  { nom: "PRINTEMPS",                  debut: "2026-05-18", fin: "2026-06-18", nuit: 445, nuitFS: 545 },
+  { nom: "ÉTÉ",                        debut: "2026-06-19", fin: "2026-07-16", nuit: 520, nuitFS: 745 },
+  { nom: "SEMAINES DE LA CONSTRUCTION",debut: "2026-07-17", fin: "2026-08-01", nuit: 575, nuitFS: 745 },
+  { nom: "ÉTÉ",                        debut: "2026-08-02", fin: "2026-08-29", nuit: 520, nuitFS: 745 },
+  { nom: "AUTOMNE",                    debut: "2026-08-30", fin: "2026-09-03", nuit: 445, nuitFS: 545 },
+  { nom: "FÊTE DU TRAVAIL",            debut: "2026-09-04", fin: "2026-09-06", nuit: 675, nuitFS: null },
+  { nom: "AUTOMNE",                    debut: "2026-09-07", fin: "2026-10-08", nuit: 445, nuitFS: 545 },
+  { nom: "ACTION DE GRÂCES",           debut: "2026-10-09", fin: "2026-10-11", nuit: 675, nuitFS: null },
+  { nom: "AUTOMNE",                    debut: "2026-10-12", fin: "2026-12-17", nuit: 445, nuitFS: 545 },
+  { nom: "PÉRIODE DES FÊTES",          debut: "2026-12-18", fin: "2027-01-02", nuit: 995, nuitFS: null },
+];
+
+const FRAIS_MENAGE       = 275;
+const TAXE_HEBERG_RATE   = 0.035;
+const TPS_TVQ_RATE        = 0.14975;
+const EXTRA_PERS          = 40;
+const BASE_PERS           = 8;
+const RABAIS              = 0.25;
+const DEPOT_SECURITE      = 750;
+
+// Parse "YYYY-MM-DD" → Date locale à midi (évite décalage UTC)
+function pd(str) {
+  if (!str) return null;
+  const p = str.split("-").map(Number);
+  return new Date(p[0], p[1]-1, p[2], 12, 0, 0);
+}
+
+function getTarif(date) {
+  const d = (date instanceof Date) ? date : pd(date);
+  for (const t of TARIFS) {
+    if (!t.debut) continue;
+    if (d >= pd(t.debut) && d <= pd(t.fin)) return t;
+  }
+  return TARIFS[0];
+}
+
+// Vendredi (5) ou samedi (6) = fin de semaine
+function isFS(d) { return d.getDay() === 5 || d.getDay() === 6; }
+
+function getNuits(arrivee, depart) {
+  const list = [];
+  const cur = pd(arrivee);
+  const fin = pd(depart);
+  while (cur < fin) {
+    list.push(new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), 12, 0, 0));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return list;
+}
+
+function calculer(arrivee, depart, nbPers) {
+  const nuits = getNuits(arrivee, depart);
+  const nb = nuits.length;
+  if (nb < 1) return null;
+
+  const detail = nuits.map(d => {
+    const t = getTarif(d);
+    const fs = isFS(d);
+    const base = fs && t.nuitFS ? t.nuitFS : t.nuit;
+    return { date: d, tarif: t, base, fs };
+  });
+
+  let location = 0;
+  detail.forEach((n, i) => { location += i >= 2 ? n.base * (1 - RABAIS) : n.base; });
+
+  const extraPers   = Math.max(0, nbPers - BASE_PERS);
+  const fraisPers   = extraPers * EXTRA_PERS * nb;
+  const st1         = location + fraisPers;
+  const taxeHeberg  = st1 * TAXE_HEBERG_RATE;
+  const st2         = st1 + FRAIS_MENAGE + taxeHeberg;
+  const tpsTvq      = st2 * TPS_TVQ_RATE;
+  const total       = st2 + tpsTvq;
+
+  return { nb, detail, location, fraisPers, extraPers, st1, taxeHeberg, st2, tpsTvq, total, depot: total*0.5, solde: total*0.5 };
+}
+
+function fmt(n) {
+  return n.toLocaleString("fr-CA", { style: "currency", currency: "CAD" });
+}
+
+function fmtDate(d) {
+  return d.toLocaleDateString("fr-CA", { weekday: "short", month: "short", day: "numeric" });
+}
+
+// ─── ÉTAT ────────────────────────────────────────────────────
+let detailVisible = false;
+let dernierResultat = null;
+
+function toggleDetail() {
+  detailVisible = !detailVisible;
+  const el = document.getElementById("detail-content");
+  const btn = document.getElementById("btn-detail");
+  el.classList.toggle("hidden", !detailVisible);
+  btn.textContent = (detailVisible ? "▲ Masquer" : "▼ Voir") + " le détail";
+}
+
+function recalculer() {
+  const arrivee = document.getElementById("arrivee").value;
+  const depart  = document.getElementById("depart").value;
+  const pers    = parseInt(document.getElementById("slider").value);
+
+  // Mettre à jour l'affichage du nombre de personnes
+  document.getElementById("pers-val").textContent = pers;
+  const extraEl = document.getElementById("pers-extra");
+  if (pers > BASE_PERS) {
+    extraEl.textContent = `+${pers - BASE_PERS} pers. supp. × ${fmt(EXTRA_PERS)}/nuit`;
+    extraEl.classList.remove("hidden");
+  } else {
+    extraEl.classList.add("hidden");
+  }
+
+  // Badge période
+  const badgeEl = document.getElementById("badge-periode");
+  if (arrivee) {
+    const t = getTarif(arrivee);
+    let txt = `<span style="letter-spacing:0.1em;text-transform:uppercase">Période : </span><strong>${t.nom}</strong>`;
+    if (t.nuitFS) txt += ` <span style="color:#9cad9c"> · Semaine ${fmt(t.nuit)} · Fin de sem. ${fmt(t.nuitFS)}</span>`;
+    else          txt += ` <span style="color:#9cad9c"> · ${fmt(t.nuit)}/nuit</span>`;
+    badgeEl.innerHTML = txt;
+    badgeEl.classList.remove("hidden");
+  } else {
+    badgeEl.classList.add("hidden");
+  }
+
+  const resultatEl = document.getElementById("resultat");
+  const erreurEl   = document.getElementById("erreur");
+
+  if (!arrivee || !depart) {
+    resultatEl.classList.add("hidden");
+    erreurEl.classList.add("hidden");
+    return;
+  }
+
+  const r = calculer(arrivee, depart, pers);
+  dernierResultat = r;
+
+  if (!r) {
+    resultatEl.classList.add("hidden");
+    erreurEl.classList.remove("hidden");
+    return;
+  }
+
+  erreurEl.classList.add("hidden");
+  resultatEl.classList.remove("hidden");
+
+  document.getElementById("total-label").textContent = `Total pour ${r.nb} nuit${r.nb > 1 ? "s" : ""}`;
+  document.getElementById("total-montant").textContent = fmt(r.total);
+  document.getElementById("ds-depot").textContent = fmt(r.depot);
+  document.getElementById("ds-solde").textContent = fmt(r.solde);
+
+  // Construire le détail
+  let html = `<div class="nuits-detail">
+    <div class="nd-titre">Décomposition des nuits</div>`;
+  r.detail.forEach((n, i) => {
+    const prix = i >= 2 ? n.base * 0.75 : n.base;
+    const cls  = i >= 2 ? " supp" : "";
+    html += `<div class="nuit-row${cls}">
+      <span>${fmtDate(n.date)}
+        ${n.fs ? '<span class="tag-fs"> (FS)</span>' : ""}
+        ${i >= 2 ? '<span class="tag-rabais"> (-25%)</span>' : ""}
+      </span>
+      <span>${fmt(prix)}</span>
+    </div>`;
+  });
+  html += `</div>`;
+
+  html += ligne("Frais de location", r.location);
+  if (r.fraisPers > 0) {
+    html += ligne(`Pers. supp. (${r.extraPers} × ${fmt(EXTRA_PERS)} × ${r.nb} nuits)`, r.fraisPers);
+  }
+  html += `<div class="sep-h">` + ligne("Sous-total location", r.st1, "bold") + `</div>`;
+  html += ligne("Frais de ménage", FRAIS_MENAGE);
+  html += ligne("Taxe d'hébergement (3,5% sur location)", r.taxeHeberg);
+  html += `<div class="sep-h">` + ligne("Sous-total avant TPS/TVQ", r.st2, "bold") + `</div>`;
+  html += ligne("TPS + TVQ (14,975%)", r.tpsTvq);
+  html += `<div class="sep-h2">` + ligne("TOTAL", r.total, "accent") + `</div>`;
+  html += `<div class="badge-depot-sec"><strong>Dépôt de sécurité : ${fmt(DEPOT_SECURITE)}</strong> — remboursé dans les 7 jours suivant le départ</div>`;
+
+  document.getElementById("detail-content").innerHTML = html;
+
+  // Maintenir visibilité du détail
+  document.getElementById("detail-content").classList.toggle("hidden", !detailVisible);
+}
+
+function ligne(label, val, cls) {
+  const c = cls || "";
+  return `<div class="ligne ${c}"><span>${label}</span><span>${fmt(val)}</span></div>`;
+}
+
+// ─── ÉVÉNEMENTS ──────────────────────────────────────────────
+document.getElementById("arrivee").addEventListener("change", function() {
+  // S'assurer que départ >= arrivée
+  const d = document.getElementById("depart");
+  if (d.value && d.value < this.value) d.value = "";
+  d.min = this.value;
+  recalculer();
+});
+document.getElementById("depart").addEventListener("change", recalculer);
+document.getElementById("slider").addEventListener("input", recalculer);
+
+// Date min = aujourd'hui
+(function() {
+  const t = new Date();
+  const s = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
+  document.getElementById("arrivee").min = s;
+  document.getElementById("depart").min  = s;
+})();
+</script>
+</body>
+</html>
